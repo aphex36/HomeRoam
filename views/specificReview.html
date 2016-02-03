@@ -1,0 +1,24 @@
+
+  <h2 style="text-align: center">{{review.params.name}} Reviews</h2>
+  <div class="map">
+    <map scrollwheel: "false" navigationControl: "false"  mapTypeControl: "false" scaleControl: "false" zoom="15" draggable="false" zoom-control="false" center="{{review.params.location.latitude}}, {{review.params.location.longitude}}">
+      <marker position="{{review.params.location.latitude}}, {{review.params.location.longitude}}"></marker>
+    </map>
+  </div>
+  <h3>Ratings: {{review.params.friendRecs}}/5</h3>
+  <h3>{{review.params.friendRecs}} friends Rec-it!</h3>
+  <h3 id="address"> Address: {{review.params.address}}</h3>
+
+  <div id="reviews" style="border:1px solid black;height:auto">
+    <div id="left-pane">
+      <div class='list-question question-info' ng-repeat="specReview in review.params.userReviews">
+        <h6>{{specReview.summary}} - {{specReview.userName}}</h6>
+        <div style='text-align:left'>
+            <span ng-repeat="star in specReview.stars track by $index">{{star}}</span>
+        </div>
+        <span>{{specReview.actualReview}}</span>
+        <div><b>Rec-it!</b></div>
+      </div>
+    </div>
+  </div>
+<div>

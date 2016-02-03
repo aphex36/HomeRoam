@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>HomeRoam</title>
+  <link rel="icon" type="image/png" href="http://i.imgur.com/yQC5GSf.png" sizes="32x32" />
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-route.js"></script>
+  <script src="handlebars.js"></script>
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Parisienne|Cabin">
+  <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/374061708/normalize.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/374061708/styles.css">
+  <link href='http://fonts.googleapis.com/css?family=Oleo+Script' rel='stylesheet' type='text/css'>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  <script src="masonry.js"></script>
+  <script src="imagesLoaded.min.js"></script>
+
+  <!-- Tab to render on password update tab clicked -->
+  <script id='passwordUpdate' type="text/x-handlebars-template">
+    <div style='width: 30%'>
+      <span style='color:black; font-size: 20px; font-weight: bold'>Update Password</span><br>
+      <span id='updatePasswordError' style='display: none; color:red'>Previous old password is incorrect</span><br>
+      <span style='color:black'>Old Password</span><input id='oldPassword' type='password' style='float: right;color:black'></input><br><br>
+      <span style='color:black'>New Password</span><input id='newPassword' type='password' style='float: right;color:black'></input><br><br>
+      <button type="button" id='updatePassword' style='float: right' class="btn btn-primary">Update</button><br><br>
+    </div>
+  </script>
+
+  <!-- Tab to render on email update tab clicked -->
+  <script id='emailUpdate' type="text/x-handlebars-template">
+    <div style='width: 30%'>
+      <span style='color:black; font-size: 20px; font-weight: bold'>Update Email</span><br>
+      <span id='updateEmailError' style='display: none; color:red'>Email is already registered</span><br>
+      <span style='color:black'>New Email</span><input id='newEmail' style='float: right;color:black'></input><br><br>
+      <button type="button" id='updateEmail' style='float: right' class="btn btn-primary">Update</button><br><br>
+    </div>
+  </script>
+
+  <!-- Tab to render on "My posts" update tab clicked -->
+  <script id='myPostsUpdate' type='text/x-handlebars-template'>
+    <div id='myPostsGallery' style="opacity: 0; display: block">
+      {{#if actualPosts}}
+        {{#each actualPosts}}
+        <div class="post">
+          <div class="meta">
+            <div class="actions" style='vertical-align: top; float: right'>
+              <a style="cursor: pointer" postid='{{this.postid}}' class='trashSymbol remove'>
+                <i class="fa fa-trash"></i>
+              </a>
+            </div>
+            <h3 onclick="$($(this).siblings()[1]).toggle(); if($(this).find('i').attr('class') === 'fa fa-caret-down'){$(this).find('i').attr('class', 'fa fa-caret-up') } else{$(this).find('i').attr('class', 'fa fa-caret-down')} $('#myPostsGallery').masonry();" style="cursor: pointer; margin: 0px; display: inline-block"><b>{{ this.name }}</b><i style='margin-left: 2px' class='fa fa-caret-down'></i></h3>
+            <div class='additionalInfo' style='border: 1px solid black; display:none'>
+              <h3><u>Description</u>: {{this.description}}</h3>
+              <h3><u>Location</u>: {{this.location}}</h3>
+              <h3><u>Type</u>: {{this.type}}</h3>
+              <h3><u>Square Feet</u>: {{this.square_feet}}</h3>
+              <h3><u>Action</u>: {{this.action}}</h3>
+              <a href='#/post/{{this.postid}}'>Post Page</a>
+            </div>
+          </div>
+          <img src="{{this.source}}" alt="{{this.title}}"></img>
+        </div>
+        {{/each}}
+      {{else}}
+        <h3 style='text-align: center'>No posts made!</h3>
+      {{/if}}
+    </div>
+  </script>
+
+  <!-- Logged in pane to render once user logs in-->
+  <script id='loggedInSettings' type="text/x-handlebars-template">
+    <div class="dropdown" style="display: inline-block; float: right; margin-right: 10px; margin-bottom: 0px">
+      <i style="cursor: pointer; padding-left:5px; padding-top:10px; color: black" class="fa fa-caret-down" data-toggle="dropdown"></i>
+      <ul style='margin-right: 30px; width: 40px' class="dropdown-menu">
+        <li style='cursor: pointer; color: black' id='userProfilePage'><a href='#/users/{{userName}}'>My Profile</a></li>
+        <li style='cursor: pointer; color: black' id='userLogout'><a>Logout</a></li>
+        <li style='cursor: pointer; color: black' id='userSettings'><a href='#/settings'>Settings</a></li>
+      </ul>
+    </div>
+    <img style='float:right; width: 40px; height:34px' src='http://educationequality.ie/wp-content/uploads/2015/12/anonymous_user_profile.jpg' id='userProfile'></img>
+    <div style='float:right; visibility: hidden'>ss</div>
+    <button id='uploadHome' class='btn btn-default' style='float: right' onclick='checkIfLoggedInAndUpload()'>Upload</button>
+    <div style='float:right; visibility: hidden'>ss</div>
+    <button data-target='#postModal' data-toggle="modal" style='float:right' class='btn btn-default'>Search</button>
+    <div style='float:right; visibility: hidden'>ss</div>
+  </script>
+
+  <!-- Logged out pane to render once user logs out-->
+  <script id='loggedOutSettings' type="text/x-handlebars-template">
+    <button style='float: right' id='uploadHome' class='btn btn-default' onclick='checkIfLoggedInAndUpload()'>Upload</button>
+    <div style='float:right; visibility: hidden'>ss</div>
+    <button style='float:right' id='loginOrSignUpButton' class='btn btn-default'>Login or Sign Up</button>
+    <div style='float:right; visibility: hidden'>ss</div>
+    <button data-target='#postModal' data-toggle="modal" style='float:right' class='btn btn-default'>Search</button>
+  </script>
+</head>
+
+<body ng-app="myApp">
+  <header style="margin-bottom: 20px; overflow: visible; background-color: white; box-shadow: inset 0px 0px 5px #ccc;">
+    <div class="container" style='width: 80%'>
+      <a id='director' href='#/' style='display: none'></a>
+      <h1 style='display: block'>
+        <i style='color: black' class="fa fa-home fa-4x"></i>
+        <span onclick="$('#homePage')[0].click()" style="font: 400 40px/1.3 'Oleo Script', Helvetica, sans-serif; cursor: pointer;color: black">HomeRoam</span>
+        <a id='homePage' style="display: hidden" href="#/"></a>
+      </h1>
+      <div id='loginOrLogoutSettings' style='display: none; margin-top: 5px'>
+        <button style='float: right' id='uploadHome' class='btn btn-default' onclick='checkIfLoggedInAndUpload()'>Upload</button>
+        <div style='float:right; visibility: hidden'>ss</div>
+        <button style='float:right' id='loginOrSignUpButton' class='btn btn-default'>Login or Sign Up</button>
+        <div style='float:right; visibility: hidden'>ss</div>
+        <button data-target='#postModal' data-toggle="modal" style='float:right' class='btn btn-default'>Search</button>
+      </div>
+    </div>
+  </header>
+  <div>
+    <!-- Login Modal that will allow the user a place to enter their credentials as well as to sign up-->
+    <div id="loginModal" class="modal fade" style="height: 700px; margin: 0px" role="dialog">
+      <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h3 style='font-weight: 32px' class="modal-title">Login or Signup!</h4>
+            </div>
+            <div class="modal-body; height: auto">
+              <div style='padding-left: 3px; padding-right: 10px; width: 47%; display: inline-block; border-right: 1px solid black'>
+                <span style='color:black; font-size: 20px; font-weight: bold'>Signup</span><br>
+                <span id='signUpError' style='visibility: hidden; color:red'>Username is already taken</span><br>
+                <span style='color:black'>Username</span><input id='userNameRegistration' style='float: right;color:black'></input><br><br>
+                <span style='color:black'>Email</span><input id='emailRegistration' style='float: right;color:black'></input><br><br>
+                <span style='color:black'>Password</span><input id='passwordRegistration' type='password' style='float: right; color:black'></input><br><br>
+                <button type="button" id='createProfile' onclick="signUserUp()" style='float: right' class="btn btn-primary">Create Profile!</button><br><br>
+              </div>
+              <div style='padding-left: 10px; width: 47%; display: inline-block; vertical-align: top'>
+                <span style='color:black; font-size: 20px; font-weight: bold'>Login</span><br>
+                <span id='loginError' style='visibility: hidden; color:red'>Username or password is incorrect</span><br>
+                <span style='color:black'>Username</span><input id='usernameLogin' style='float: right;color:black'></input><br><br>
+                <span style='color:black'>Password</span><input id='passwordLogin' type='password' style='float: right; color:black'></input><br><br>
+                <button id='userLogin' type="button" style='float: right;' class="btn btn-primary">Login</button><br><br>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <!-- Post modal for searching the home listings-->
+    <div id="postModal" class="modal fade" style="height: 700px; margin: 0px" role="dialog">
+      <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h3 class="modal-title">Search for a place to stay!</h4>
+            </div>
+            <div class="modal-body">
+              <span id='searchError' style='color: red; visibility: hidden'></span><br>
+              <h3 style='display: inline-block'>Action:</h3>
+              <select name='typeForSearch' style='color: black'>
+                <option value='Buy'>For Sale</option>
+                <option value='Sell'>For Rent</option>
+              </select><br>
+              <h3 style='display: inline-block'>Maximum Square Feet:</h3>
+              <input id='minSqForSearch' style='color: black' size='6px'></input><br>
+              <h3 style='display: inline-block'>Maximum Square Feet:</h3>
+              <input id='maxSqForSearch' style='color: black' size='6px'></input><br>
+              <h3><b>Location:</b></h3>
+              <select name='locationForSearch' style='color: black'>
+                <option value='Alabama'>Alabama</option>
+                <option value='Alaska'>Alaska</option>
+                <option value='Arizona'>Arizona</option>
+                <option value='Arkansas'>Arkansas</option>
+                <option value='California'>California</option>
+                <option value='Colorado'>Colorado</option>
+                <option value='Connecticut'>Connecticut</option>
+                <option value='Delaware'>Delaware</option>
+                <option value='Florida'>Florida</option>
+                <option value='Alabama'>Alabama</option>
+                <option value='Georgia'>Georgia</option>
+                <option value='Hawaii'>Hawaii</option>
+                <option value='Idaho'>Idaho</option>
+                <option value='Illinois'>Illinois</option>
+                <option value='Indiana'>Indiana</option>
+                <option value='Iowa'>Iowa</option>
+                <option value='Kansas'>Kansas</option>
+                <option value='Kentucky'>Kentucky</option>
+                <option value='Louisiana'>Louisiana</option>
+                <option value='Maine'>Maine</option>
+                <option value='Maryland'>Maryland</option>
+                <option value='Massachusetts'>Massachusetts</option>
+                <option value='Michigan'>Michigan</option>
+                <option value='Minnesota'>Minnesota</option>
+                <option value='Mississippi'>Mississippi</option>
+                <option value='Missouri'>Missouri</option>
+                <option value='Montana'>Montana</option>
+                <option value='Nebraska'>Nebraska</option>
+                <option value='Nevada'>Nevada</option>
+                <option value='New Hampshire'>New Hampshire</option>
+                <option value='New Jersey'>New Jersey</option>
+                <option value='New Mexico'>New Mexico</option>
+                <option value='New York'>New York</option>
+                <option value='North Carolina'>North Carolina</option>
+                <option value='North Dakota'>North Dakota</option>
+                <option value='Ohio'>Ohio</option>
+                <option value='Oklahoma'>Oklahoma</option>
+                <option value='Oregon'>Oregon</option>
+                <option value='Pennsylvania'>Pennsylvania</option>
+                <option value='Rhode Island'>Rhode Island</option>
+                <option value='South Carolina'>South Carolina</option>
+                <option value='Tennessee'>Tennessee</option>
+                <option value='Texas'>Texas</option>
+                <option value='Utah'>Utah</option>
+                <option value='Vermont'>Vermont</option>
+                <option value='Virginia'>Virginia</option>
+                <option value='Washington'>Washington</option>
+                <option value='West Virginia'>West Virginia</option>
+                <option value='Wisconsin'>Wisconsin</option>
+                <option value='Wyoming'>Wyoming</option>
+              </select>
+              <br>
+              <h3>Type</h3>
+              <form style='display: inline-block;' role="form">
+                <div class="checkbox-inline">
+                  <h3><input type="checkbox" section="Houses" selectedvalue='Home' name="searchForm"></input>Home</h3>
+                </div>
+                <div class="checkbox-inline">
+                    <h3><input type="checkbox" selectedvalue='Apartment' section="Apartment" name="searchForm"></input>Apartment</h3>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" onclick="loadSearch()">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--Small dialog to confirm a person's deletion of their own post-->
+      <div id="deletePostModal" class="modal fade" style="height: 700px; margin: 0px" role="dialog">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-body">
+              <h3>Are you sure you want to delete this post?</h3>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id='deletePost'>Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- A modal to present a form to fill out and upload a listing-->
+      <div id="uploadModal" class="modal fade" style="height: 700px; padding-top: 0px; margin: 0px" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3 class="modal-title">Upload a listing!</h4>
+              </div>
+              <div class="modal-body">
+                <span id='uploadError' style='color: red; visibility: hidden'></span><br>
+                <h3 style='display: inline-block'>Title:</h3>
+                <input id='titleUpload' style='color: black' size='20px'></input><br>
+                <h3 style='display: inline-block'>Description:</h3>
+                <textarea id='descriptionUpload' style='margin-left: 0px; margin-bottom: 0px; color: black; resize: none' cols='60'></textarea>
+                <h3 style='display: inline-block'>Action:</h3>
+                <select name='typeForUpload' style='color: black'>
+                  <option value='Buy'>For Sale</option>
+                  <option value='Sell'>For Rent</option>
+                </select><br>
+                <h3 style='display: inline-block'>Square Feet:</h3>
+                <input id='sqForUpload' style='color: black' size='6px'></input><br>
+                <h3 style='display: inline-block'>Image Source:</h3>
+                <input id='imgForUpload' style='color: black' size='20px'></input><br>
+
+                <h3><b>Location:</b></h3>
+                <select name='locationForUpload' style='color: black'>
+                  <option value='Alabama'>Alabama</option>
+                  <option value='Alaska'>Alaska</option>
+                  <option value='Arizona'>Arizona</option>
+                  <option value='Arkansas'>Arkansas</option>
+                  <option value='California'>California</option>
+                  <option value='Colorado'>Colorado</option>
+                  <option value='Connecticut'>Connecticut</option>
+                  <option value='Delaware'>Delaware</option>
+                  <option value='Florida'>Florida</option>
+                  <option value='Alabama'>Alabama</option>
+                  <option value='Georgia'>Georgia</option>
+                  <option value='Hawaii'>Hawaii</option>
+                  <option value='Idaho'>Idaho</option>
+                  <option value='Illinois'>Illinois</option>
+                  <option value='Indiana'>Indiana</option>
+                  <option value='Iowa'>Iowa</option>
+                  <option value='Kansas'>Kansas</option>
+                  <option value='Kentucky'>Kentucky</option>
+                  <option value='Louisiana'>Louisiana</option>
+                  <option value='Maine'>Maine</option>
+                  <option value='Maryland'>Maryland</option>
+                  <option value='Massachusetts'>Massachusetts</option>
+                  <option value='Michigan'>Michigan</option>
+                  <option value='Minnesota'>Minnesota</option>
+                  <option value='Mississippi'>Mississippi</option>
+                  <option value='Missouri'>Missouri</option>
+                  <option value='Montana'>Montana</option>
+                  <option value='Nebraska'>Nebraska</option>
+                  <option value='Nevada'>Nevada</option>
+                  <option value='New Hampshire'>New Hampshire</option>
+                  <option value='New Jersey'>New Jersey</option>
+                  <option value='New Mexico'>New Mexico</option>
+                  <option value='New York'>New York</option>
+                  <option value='North Carolina'>North Carolina</option>
+                  <option value='North Dakota'>North Dakota</option>
+                  <option value='Ohio'>Ohio</option>
+                  <option value='Oklahoma'>Oklahoma</option>
+                  <option value='Oregon'>Oregon</option>
+                  <option value='Pennsylvania'>Pennsylvania</option>
+                  <option value='Rhode Island'>Rhode Island</option>
+                  <option value='South Carolina'>South Carolina</option>
+                  <option value='Tennessee'>Tennessee</option>
+                  <option value='Texas'>Texas</option>
+                  <option value='Utah'>Utah</option>
+                  <option value='Vermont'>Vermont</option>
+                  <option value='Virginia'>Virginia</option>
+                  <option value='Washington'>Washington</option>
+                  <option value='West Virginia'>West Virginia</option>
+                  <option value='Wisconsin'>Wisconsin</option>
+                  <option value='Wyoming'>Wyoming</option>
+                </select>
+                <br>
+                <h3 style='display: inline-block'>Type</h3><br>
+                  <form id="myForm">
+                    <input type="radio" name="uploadForm" value="Home"><span style='color: black'> Home  </span></input>
+                    <input style='margin-left: 10px' type="radio" name="uploadForm" value="Apartment"><span style='color: black'> Apartment  </span></input>
+                  </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="uploadPost()">Submit</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <!-- The view all of the partials will be rendered in-->
+      <ng-view>
+      </ng-view>
+  </div>
+  <script>
+     var myApp = angular.module("myApp", ['ngRoute']);
+
+     myApp.config(function($sceDelegateProvider)
+     {
+       $sceDelegateProvider.resourceUrlWhitelist(['/**', 'http://engr.uconn.edu/~gelyko/images/people_pic/anonymous.png','http://media.npr.org/assets/news/1659/10/27/facebook1_sq-17f6f5e06d5742d8c53576f7c13d5cf7158202a9.jpg?s=16','self']);
+     });
+
+     myApp.config(function($routeProvider, $locationProvider)
+     {
+       $routeProvider
+            .when('/',
+            {
+              controller: 'mainController',
+              templateUrl: './search.html',
+              controllerAs: 'main'
+            })
+            .when('/explore/:category',
+            {
+              controller: 'exploreController',
+              templateUrl: './userListings.html',
+              controllerAs: 'explore'
+            })
+            .when('/vendor/:vendorId',
+            {
+                controller: 'reviewController',
+                templateUrl:'./specificReview.html',
+                controllerAs: 'review'
+            })
+            .when('/post/:postId',
+            {
+                controller: 'postController',
+                templateUrl:'./specificPost.html',
+                controllerAs: 'post'
+            })
+            .when('/users/:userId',
+            {
+              controller: 'userController',
+              templateUrl:'./specificUser.html',
+              controllerAs: 'user'
+            })
+            .when('/users/:userId/posts',
+            {
+              controller: 'exploreController',
+              templateUrl:'./userListings.html',
+              controllerAs: 'userPosts'
+            })
+            .when('/search',
+            {
+              controller: 'exploreController',
+              templateUrl:'./userListings.html',
+              controllerAs: 'searchPosts'
+            })
+            .when('/settings',
+            {
+              controller: 'settingsController',
+              templateUrl:'./settings.html',
+              controllerAs: 'settings'
+            })
+     });
+
+     myApp.controller('mainController', ['$route', '$scope', '$routeParams', '$location',
+       function($route, $scope, $routeParams, $location) {
+         this.$route = $route;
+         this.$location = $location;
+         this.$routeParams = $routeParams;
+         $scope.results = {};
+         $scope.results.loggedIn = $routeParams.loggedIn;
+         $scope.$on('$viewContentLoaded', function()
+         {
+           //On the front page, just do a little animation
+           $('.btn-danger').toggle('slow');
+         });
+      }]);
+      myApp.controller('postController', ['$scope', '$timeout', '$routeParams', '$http', function($scope, $timeout, $routeParams, $http) {
+        $scope.$on('$routeChangeSuccess', function(){
+          //Get a certain post and display it in the specificPost partial view
+          $http.get("/posts/"  + $routeParams.postId)
+          .success(function(response)
+          {
+            //Get all information and stuff into ViewModel
+            $scope.results = response;
+            function safeApply(scope, fn) {
+                (scope.$$phase || scope.$root.$$phase) ? fn() : scope.$apply();
+            }
+            safeApply($scope, function(){});
+            $timeout(function()
+            {
+              // After view content is done loading, then show the post
+              $("#displayPost").show();
+            })
+          });
+        });
+      }]);
+
+      myApp.controller('userController', ['$scope', '$timeout','$routeParams', '$http', function($scope, $timeout, $routeParams, $http) {
+        function safeApply(scope, fn) {
+            (scope.$$phase || scope.$root.$$phase) ? fn() : scope.$apply();
+        }
+        $scope.$on('$routeChangeSuccess', function(){
+          //Get the user id from the url
+          $http.get("/users/"  + $routeParams.userId)
+          .success(function(response)
+          {
+
+            //Get the data and update the initial attributes of the user page
+            specUser = {};
+            specUser.email = "Email: " + response[0].email;
+            specUser.title = response[0].user_name + "'s Page";
+            specUser.user_name = response[0].user_name;
+
+            //This will show if there were any reviews on that user
+            //response[0].summary is null if no reviews exist, but if it does exist
+            //set the response equal to results to render all reviews
+            if(response[0].summary)
+            {
+              $scope.results = response;
+            }
+            $scope.specUser = specUser;
+            $http.get('/isLoggedIn')
+            .success(function(responseAfter)
+            {
+              //If the current User is on their own page, store that in the VM
+              //This will help prevent adding the option to review yourself (removes the review form)
+              if(responseAfter[0] === response[0].user_name)
+              {
+                $scope.isUserOnOwnPage = true;
+              }
+
+              safeApply($scope, function(){});
+            });
+            $timeout(function()
+            {
+              //Show the view content once completed
+              $("#userPage").show();
+              $("#newReview").click(function()
+              {
+                $http.get('/isLoggedIn')
+                .success(function(response)
+                {
+                  //If user isn't logged in, direct them to the login modal
+                  if(response[0] == null)
+                  {
+                    $("#loginModal").modal();
+                  }
+                  else
+                  {
+                    //User is logged in
+                    //Check if the data provided is valid
+
+                    //Check if summary and review are not null and if so display an error
+                    if($("#newSummary").val() == "")
+                    {
+                      $("#reviewError").html("Summary cannot be blank");
+                      $("#reviewError").css('visibility','visible');
+                      return;
+                    }
+
+                    if($("#newReviewArea").val() == "")
+                    {
+                      $("#reviewError").html("Review cannot be blank");
+                      $("#reviewError").css('visibility','visible');
+                      return;
+                    }
+
+
+                    //Check that the user is not exceeding char limit and if so indicate that
+                    if($("#newReviewArea").val().length > 3000)
+                    {
+                      $("#reviewError").html("Review cannot be longer than 3000 characters");
+                      $("#reviewError").css('visibility','visible');
+                      return;
+                    }
+
+                    if($("#newSummary").val().length > 50)
+                    {
+                      $("#reviewError").html("Summary cannot be longer than 50 characters");
+                      $("#reviewError").css('visibility','visible');
+                      return;
+                    }
+
+                    //Passed all tests so hide error
+                    $("#reviewError").css('visibility','hidden');
+                    $http.post("/new_review", {'summary': $("#newSummary").val(), 'review': $("#newReviewArea").val(),'stars': $("#ratingByUser").val(), 'userreviewed': $scope.specUser.user_name, "byuser": response[0]})
+                    .success(function(updatedReviews)
+                    {
+                      //Add the new review and empty the fields entered and update the scope.results (reviews)
+                      $("#newReviewArea").val("");
+                      $("#newSummary").val("");
+                      $scope.results = updatedReviews;
+                      safeApply($scope, function(){});
+                    });
+                  }
+                });
+              })
+            })
+          });
+        });
+      }]);
+      myApp.controller('settingsController', ['$scope', '$timeout', '$routeParams', '$http', function($scope, $timeout, $routeParams, $http) {
+        $scope.results = {};
+
+        //Call this on the user wanting to change password
+        $scope.changePasswordFunctionalities = function()
+        {
+          $http.post('/login', {'user_name': $scope.user,  "password": $("#oldPassword").val()})
+          .success(function(response)
+          {
+            //Check if the user's user_name and password match an entry in the database
+            //If so continue to update credentials
+            if(response.length != 0 && response[0].user_name === $scope.user)
+            {
+              $http.post('/update_credentials', {'password': $("#newPassword").val(), 'user_name' : $scope.user})
+              .success(function(response)
+              {
+                //Update the credentials and indicate the success message
+                $("#updatePasswordError").css('color','green');
+                $("#updatePasswordError").html('Password successfully updated!');
+                $("#updatePasswordError").fadeIn(100, function()
+                {
+                  $("#updatePasswordError").fadeOut(5000);
+                })
+              })
+            }
+            else {
+              //Password initially provided wasn't correct so indicate that
+              $("#updatePasswordError").css('color','red');
+              $("#updatePasswordError").html('Previous password is incorrect');
+              $("#updatePasswordError").fadeIn(100, function()
+              {
+                $("#updatePasswordError").fadeOut(5000);
+              })
+            }
+
+          })
+        }
+
+        //Change the email of a user
+        $scope.changeEmailFunctionality = function()
+        {
+          //Check that the email is available
+          $http.get('/check_email_availability?email=' + $("#newEmail").val())
+          .success(function(response)
+          {
+            if(response.length == 0)
+            {
+              //Email is available (no records with that email) so update the email now
+              $http.post('/update_credentials', {'email': $("#newEmail").val(), 'user_name': $scope.user})
+              .success(function(response)
+              {
+                //On success indicate the success message
+                $("#updateEmailError").css('color','green');
+                $("#updateEmailError").html('Email successfully updated!');
+                $("#updateEmailError").fadeIn(100, function()
+                {
+                  $("#updateEmailError").fadeOut(5000);
+                })
+              })
+            }
+            //In this case email was the same as before (no update)
+            //Checks the currentuser and compares it to a user who has the same email
+            else if(response[0] == $scope.user)
+            {
+              $("#updateEmailError").css('color','red');
+              $("#updateEmailError").html('Email did not change');
+              $("#updateEmailError").fadeIn(100, function()
+              {
+                $("#updateEmailError").fadeOut(5000);
+              })
+            }
+
+            //Email is taken in this case
+            else {
+              $("#updateEmailError").css('color','red');
+              $("#updateEmailError").html('Email is taken already');
+              $("#updateEmailError").fadeIn(100, function()
+              {
+                $("#updateEmailError").fadeOut(5000);
+              })
+            }
+          })
+        }
+
+        $scope.$on('$routeChangeSuccess', function(){
+          $http.get('/isLoggedIn')
+          .success(function(response)
+          {
+            //If user is not logged in, they should not access settings
+            $scope.user = response[0];
+            if(response[0] == null)
+            {
+              $("#homePage")[0].click();
+            }
+          })
+          .error(function(response)
+          {
+            //No access to settings allowed if not logged in
+            $("#homePage")[0].click();
+          })
+        });
+
+        function safeApply(scope, fn) {
+            (scope.$$phase || scope.$root.$$phase) ? fn() : scope.$apply();
+        }
+        safeApply($scope, function(){});
+        $timeout(function()
+        {
+          //Add the email tab functionality to update email on click of submit
+          $("#emailTab").click(function()
+          {
+            renderArea = Handlebars.compile($("#emailUpdate").html());
+            $("#updateArea").html(renderArea());
+            $("#updateEmail").click(function()
+            {
+              $scope.changeEmailFunctionality();
+            });
+          })
+
+          //Add the personal posts tab (use handlebars)
+          $("#personalPostsTab").click(function()
+          {
+            renderArea = Handlebars.compile($("#myPostsUpdate").html());
+            $http.get('/api/users/' + $scope.user + "/posts")
+            .success(function(response)
+            {
+              //In this case get the current user posts and call masonry on the grid
+              response.results.user = $scope.user;
+              $("#updateArea").html(renderArea({'actualPosts':response.results}));
+              $("#myPostsGallery").masonry();
+              $("#myPostsGallery").on('removeComplete',
+              function(event, removedItems)
+              {
+                if($('.post').length === 0)
+                {
+                  $('#myPostsGallery').html("<h3 style='text-align: center; color: #34495E'>No posts made!</h3>");
+                }
+              })
+              $("#myPostsGallery").animate({opacity: 1});
+
+              //Will delete the post
+              $(".trashSymbol").click(function()
+              {
+                //On click of the trash symbol
+                //Modal to confirm deletion
+                var clickedTrash = this;
+                $("#deletePostModal").modal();
+                $("#deletePost").click(function()
+                {
+                  $("#deletePostModal").modal('hide');
+                  $("#deletePostModal").on('hidden.bs.modal', function()
+                  {
+                    //Calls remove post, and re-renders the grid
+                    removePost($(clickedTrash).attr('postid'));
+                    $('#myPostsGallery').masonry('remove', $(clickedTrash).parent().parent().parent());
+                    $('#myPostsGallery').masonry();
+                    $("#deletePostModal").on('hidden.bs.modal', function()
+                    {
+                      var x = 1+1;
+                    });
+                  })
+                })
+              })
+            });
+          });
+          //On the password tab's click render the password change tab
+          $("#passwordTab").click(function()
+          {
+            renderArea = Handlebars.compile($("#passwordUpdate").html());
+            $("#updateArea").html(renderArea());
+            $("#updatePassword").click(function()
+            {
+              $scope.changePasswordFunctionalities();
+            });
+          });
+          $("#updatePassword").click(function()
+          {
+            $scope.changePasswordFunctionalities();
+          });
+        })
+    }]);
+     myApp.controller('exploreController', ['$scope', '$location','$timeout', '$routeParams', '$http', function($scope, $location, $timeout, $routeParams, $http) {
+       this.name = "exploreController";
+       var re = new RegExp("/explore/.*");
+       var re_2 = new RegExp("/search?.*");
+       var getPosts;
+       var type;
+       if($location.$$url.match(re))
+       {
+          getPosts =  "/api/explore/"  + $routeParams.category;
+          type='explore';
+       }
+       else if($location.$$url.match(re_2))
+       {
+         getPosts =  "/api/search?"
+         if($routeParams.min_sq_ft)
+         {
+           getPosts += 'min_sq_ft=' + $routeParams.min_sq_ft + "&"
+         }
+
+         if($routeParams.max_sq_ft)
+         {
+           getPosts += 'max_sq_ft=' + $routeParams.max_sq_ft + "&"
+         }
+
+         if($routeParams.action != 'any')
+         {
+           getPosts += 'action=' + $routeParams.action + "&"
+         }
+
+         getPosts += 'location=' + $routeParams.location + "&";
+         getPosts += 'type=' + $routeParams.type;
+         type='search';
+       }
+       else {
+         getPosts = "/api/users/" + $routeParams.userId + "/posts";
+         type='users';
+       }
+       $scope.$on('$routeChangeSuccess', function(){
+         $http.get(getPosts)
+         .success(function(response)
+         {
+           if(type == 'users')
+           {
+              $scope.userName =  $routeParams.userId + "'s listings";
+           }
+           if(type == 'search')
+           {
+              $scope.userName =  "Search Results";
+           }
+
+           if(type == 'explore')
+           {
+             $scope.userName = 'Explore ' + $routeParams.category;
+           }
+
+           $scope.displayTable = window.location.hash.substring(0,window.location.hash.indexOf("display=")) + "display=table";
+           $scope.displayGallery = window.location.hash.substring(0,window.location.hash.indexOf("display=")) + "display=gallery";
+           if($routeParams.display === 'table')
+           {
+             $scope.results = response.results;
+             $scope.results.tableName = $routeParams.specificCategory;
+             $scope.results.showTable = "true"
+             $scope.results.showGallery = "";
+             function safeApply(scope, fn) {
+                 (scope.$$phase || scope.$root.$$phase) ? fn() : scope.$apply();
+             }
+             safeApply($scope, function(){});
+             $timeout(function()
+             {
+               $("#allFilters").css('visibility','visible');
+               $("#submitFilters").click(function()
+               {
+                 if($('input[name=uploadForm]:checked').attr('value') === "sortByIncPrice")
+                 {
+                   $scope.results.sort(function(a,b)
+                   {
+                     return a.square_feet - b.square_feet
+                   })
+                 }
+                 else {
+                   $scope.results.sort(function(a,b)
+                   {
+                     return b.square_feet - a.square_feet
+                   })
+                 }
+                 safeApply($scope, function(){});
+               })
+               $("[data-toggle='popover']").popover({
+                   placement : 'right',
+                   trigger : 'hover',
+                   html : true,
+                   content : function()  {
+                    var src = $(this).attr('ng-srcs');
+                    var description = $(this).attr('ng-description');
+                    var name = $(this).attr('ng-name');
+                    return '<div class="media"><a href="#" class="pull-left"><img style="width: 80px; height: 80px" src="' + src + '" class="media-object"></a><div class="media-body"><h3 class="media-heading">' + name + '</h3><h3>' + description + '</h3></div></div>'
+                   }
+               });
+             })
+           }
+           else if($routeParams.display === 'gallery') {
+             var $rightPane;
+             $rightPane = $("#galleryPortion");
+             $scope.results = {};
+             $scope.results.showTable = "";
+             $scope.results.showGallery = "true";
+             $scope.posts = {};
+             $scope.posts.actualPosts = response.results;
+             if(response.results.length == 0)
+             {
+               $scope.userName = "No posts found!"
+             }
+             function safeApply(scope, fn) {
+                 (scope.$$phase || scope.$root.$$phase) ? fn() : scope.$apply();
+             }
+             safeApply($scope, function(){});
+             $timeout(function()
+             {
+               $("#allFilters").css('visibility','hidden');
+               $rightPane.imagesLoaded(function() {
+                   $rightPane.masonry({
+                     columnWidth: '.post',
+                     itemSelector: '.post'
+                   });
+                   $('.post').parent().animate({opacity: 1});
+                   $rightPane.on('removeComplete',
+                   function(event, removedItems)
+                   {
+                     if($('.post').length === 0)
+                     {
+                       $('#rightPane').html("<h2 style='text-align: center; color: #34495E'>No houses or apartments left!</h2>");
+                     }
+                   })
+               });
+             });
+           }
+         });
+       });
+    }]);
+     myApp.controller('reviewController', ['$routeParams', '$scope', function($routeParams, $scope) {
+         this.name = "reviewController";
+         this.params = JSON.parse(localStorage['chosenNode']);
+         var node = JSON.parse(localStorage['chosenNode']);
+     }]);
+  </script>
+
+  <script>
+    var loginAsUser = function(){
+      var request = new XMLHttpRequest();
+      request.addEventListener('load', function()
+      {
+        returnedUser = JSON.parse(request.responseText);
+        if(returnedUser[0] != null)
+        {
+          var renderLogInSettings = Handlebars.compile($("#loggedInSettings").html());
+          $("#loginOrLogoutSettings").html(renderLogInSettings({'userName': returnedUser[0]}));
+          $("#userLogout").click(function()
+          {
+            var request = new XMLHttpRequest();
+            request.addEventListener('load', function(){
+              var renderLogOutSettings = Handlebars.compile($("#loggedOutSettings").html())
+              $("#loginOrLogoutSettings").html(renderLogOutSettings());
+              addLoginFunctionalities();
+              $("#homePage")[0].click();
+            });
+            request.open('GET', '/logout');
+            request.setRequestHeader('Content-type', 'application/json');
+            request.send();
+          })
+
+        }
+        $("#loginOrLogoutSettings").show();
+      });
+      request.open('GET', '/isLoggedIn');
+      request.setRequestHeader('Content-type', 'application/json');
+      request.send();
+    }
+    loginAsUser();
+    var addLoginFunctionalities = function() {
+      $("#loginOrSignUpButton").click(function()
+      {
+        $("#loginModal").modal();
+      })
+      $("#userLogin").click(function()
+      {
+          var request = new XMLHttpRequest();
+          request.addEventListener('load', function()
+          {
+            returnedUser = JSON.parse(request.responseText);
+            if(returnedUser[0] != null)
+            {
+              $("#loginError").css("visibility",'hidden');
+              $("#loginModal").modal('hide');
+              $("#loginModal").on('hidden.bs.modal', function()
+              {
+                 var re = new RegExp("#/users/(.)*")
+                 if($(location).attr('hash').match(re) !== null)
+                 {
+                   location.reload();
+                 }
+                 else {
+                   loginAsUser();
+                   $("#loginModal").on('hidden.bs.modal', function()
+                   {
+                     var x = 1+1;
+                   });
+                   $("#usernameLogin").val("");
+                   $("#passwordLogin").val("");
+
+                 }
+              })
+            }
+            else {
+              $("#loginError").css("visibility",'visible');
+              console.log('failure');
+              console.log(returnedUser);
+            }
+          });
+          request.open('POST', '/login');
+          request.setRequestHeader('Content-type', 'application/json');
+          request.send(JSON.stringify({'user_name': $("#usernameLogin").val(), "password": $("#passwordLogin").val()}));
+      });
+    }
+    addLoginFunctionalities();
+    var checkIfLoggedInAndUpload = function()
+    {
+      var request = new XMLHttpRequest();
+      request.addEventListener('load', function(){
+        returnedUser = JSON.parse(request.responseText);
+        if(returnedUser[0] == null)
+        {
+          $("#loginModal").modal();
+        }
+        else {
+          $("#uploadModal").modal();
+        }
+      });
+      request.open('GET', '/isLoggedIn');
+      request.setRequestHeader('Content-type', 'application/json');
+      request.send();
+    }
+    var loadSearch = function()
+    {
+      if(isNaN($("#minSqForSearch")[0].value))
+      {
+        $("#searchError").html("Minimum Square feet must be a number or blank")
+        $("#searchError").css('visibility','visible')
+        return;
+      }
+
+      if(isNaN($("#maxSqForSearch")[0].value))
+      {
+        $("#searchError").html("Maximum Square feet must be a number or blank")
+        $("#searchError").css('visibility','visible')
+        return;
+      }
+      $("#postModal").modal('hide');
+      searchString = "#/search?";
+      searchString += "action=" + $("select[name='typeForSearch'] option:selected").html() + "&";
+      if($("#minSqForSearch")[0].value)
+      {
+        searchString += "min_sq_ft=" + $("#minSqForSearch")[0].value + "&"
+      }
+
+      if($("#maxSqForSearch")[0].value)
+      {
+        searchString += "max_sq_ft=" + $("#maxSqForSearch")[0].value + "&"
+      }
+
+      searchString += "type="
+      var allChecked = [];
+      $("input:checkbox[name=searchForm]:checked").each(function()
+      {
+         allChecked.push($(this).attr('selectedvalue'))
+      })
+
+      if(allChecked.length === 0)
+      {
+         allChecked = ['Home', 'Apartment'];
+      }
+      for(var i = 0; i < allChecked.length; i++)
+      {
+        if(i !=  allChecked.length - 1){
+          searchString += allChecked[i] + ","
+        }
+        else {
+          searchString += allChecked[i] + "&";
+        }
+      }
+      var location = $("select[name='locationForSearch'] option:selected").html()
+      searchString += "location=" + location + "&display=gallery";
+      $("#director").attr('href', searchString);
+      $("#director")[0].click();
+
+    }
+
+    var uploadPost = function()
+    {
+      if($("#titleUpload").val() === "")
+      {
+        $("#uploadError").html("Title cannot be blank");
+        $("#uploadError").css('visibility', 'visible');
+        return;
+      }
+      if($("#titleUpload").val().length > 50)
+      {
+        $("#uploadError").html("Title cannot be more than 50 characters");
+        $("#uploadError").css('visibility', 'visible');
+        return;
+      }
+
+      if($("#descriptionUpload").val() === "")
+      {
+        $("#uploadError").html("Description cannot be blank");
+        $("#uploadError").css('visibility', 'visible');
+        return;
+      }
+
+      if($("#descriptionUpload").val().length > 1000)
+      {
+        $("#uploadError").html("Description cannot be more than 1000 characters");
+        $("#uploadError").css('visibility', 'visible');
+        return;
+      }
+
+      if($('input[name=uploadForm]:checked').length == 0)
+      {
+        $("#uploadError").html("A section must be chosen");
+        $("#uploadError").css('visibility', 'visible');
+        return;
+      }
+
+      if($("#imgForUpload").val().length == 0)
+      {
+        $("#uploadError").html("Image URL cannot be blank");
+        $("#uploadError").css('visibility', 'visible');
+        return;
+      }
+
+
+      if($("#sqForUpload").val() === "")
+      {
+        $("#uploadError").html("Square Feet cannot be blank");
+        $("#uploadError").css('visibility', 'visible');
+        return;
+      }
+
+      if(isNaN($("#sqForUpload").val()))
+      {
+        $("#uploadError").html("Square feet must be a number");
+        $("#uploadError").css('visibility', 'visible');
+        return;
+      }
+
+      var isValidImage;
+      $("<img>", {
+        src: $("#imgForUpload").val(),
+        error: function() {
+          $("#uploadError").html("Image URL isn't valid");
+          $("#uploadError").css('visibility', 'visible');
+        },
+        load: function() {
+          $("#uploadError").css('visibility', 'hidden');
+          makeRequestToUpload();
+        }
+      });
+
+    }
+
+    var makeRequestToUpload = function()
+    {
+      var request_login = new XMLHttpRequest();
+      var postid = makeid()
+      request_login.addEventListener('load', function()
+      {
+        var returnedUser = JSON.parse(request_login.responseText);
+        var request = new XMLHttpRequest();
+        request.addEventListener('load', function()
+        {
+          $("#sqForUpload").val("")
+          $("#titleUpload").val("")
+          $("#imgForUpload").val("")
+          $("#uploadModal").modal('hide');
+          $("#uploadModal").on('hidden.bs.modal', function()
+          {
+            $("#director").attr('href', "#/post/" + postid)
+            $("#uploadModal").on('hidden.bs.modal', function()
+            {
+              console.log("do nothing")
+            });
+            $("#director")[0].click();
+          });
+        });
+
+        request.open('POST', '/upload');
+        request.setRequestHeader('Content-type', 'application/json');
+        request.send(JSON.stringify({
+        'name': $("#titleUpload").val(),
+        "description": $("#descriptionUpload").val(),
+        'action': $("select[name='typeForUpload'] option:selected").html(),
+        'square_feet': $("#sqForUpload").val(),
+        'location': $("select[name='locationForUpload'] option:selected").html(),
+        'source': $("#imgForUpload").val(),
+        'postid': postid,
+        'poster': returnedUser[0],
+        'type': $("input[name=uploadForm]:checked").attr('value')
+        }));
+      });
+
+      request_login.open('GET', '/isLoggedIn');
+      request_login.setRequestHeader('Content-type', 'application/json');
+      request_login.send();
+    }
+    var makeid = function()
+    {
+        var text = "";
+        var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+        for( var i=0; i < 8; i++ )
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+        return text;
+    }
+
+    var removePost = function(id)
+    {
+      var request = new XMLHttpRequest();
+      request.addEventListener('load', function()
+      {
+        returnedUser = JSON.parse(request.responseText);
+      });
+      request.open('DELETE', '/api/posts/' + id);
+      request.setRequestHeader('Content-type', 'application/json');
+      request.send();
+    }
+
+    var signUserUp = function()
+    {
+      if($("#userNameRegistration").val() == "")
+      {
+        $("#signUpError").html("Username cannot be blank");
+        $("#signUpError").css('visibility','visible');
+        return;
+      }
+
+      if($("#passwordRegistration").val() == "")
+      {
+        $("#signUpError").html("Password cannot be blank");
+        $("#signUpError").css('visibility','visible');
+        return;
+      }
+
+      if($("#emailRegistration").val() == "")
+      {
+        $("#signUpError").html("Email cannot be blank");
+        $("#signUpError").css('visibility','visible');
+        return;
+      }
+
+      if($("#userNameRegistration").val().length > 20)
+      {
+        $("#signUpError").html("Username can only be 20 characters");
+        $("#signUpError").css('visibility','visible');
+        return;
+      }
+
+      if($("#emailRegistration").val().length > 50)
+      {
+        $("#signUpError").html("Emails can only be 50 characters");
+        $("#signUpError").css('visibility','visible');
+        return;
+      }
+
+      if($("#passwordRegistration").val().length > 20 || $("#passwordRegistration").val().length < 5)
+      {
+        $("#signUpError").html("Password has to be between 5 and 20 characters");
+        $("#signUpError").css('visibility','visible');
+        return;
+      }
+
+      $("#signUpError").css('visibility','hidden');
+
+      var request = new XMLHttpRequest();
+      request.addEventListener('load', function()
+      {
+        returnedUser = JSON.parse(request.responseText);
+        if(returnedUser.length == 0)
+        {
+          var addUserRequest = new XMLHttpRequest();
+          addUserRequest.addEventListener('load', function()
+          {
+             $("#loginModal").modal('hide');
+             $("#loginModal").on("hidden.bs.modal", function()
+             {
+               $("#loginModal").on("hidden.bs.modal", function()
+               {
+                 var y = 1+1;
+               });
+               loginAsUser();
+             })
+          });
+          addUserRequest.open('POST', '/create_user');
+          addUserRequest.setRequestHeader('Content-type', 'application/json');
+          addUserRequest.send(JSON.stringify({'user_name': $("#userNameRegistration").val(), 'password': $("#passwordRegistration").val(), 'email': $("#emailRegistration").val()}));
+        }
+        else
+        {
+          $("#signUpError").html("Username and/or email is already registered");
+          $("#signUpError").css('visibility','visible');
+        }
+      });
+      request.open('GET', '/check_signup_constraints?userName=' + $("#userNameRegistration").val() + "&email=" + $("#emailRegistration").val());
+      request.setRequestHeader('Content-type', 'application/json');
+      request.send();
+    }
+  </script>
+</body>
+</html>

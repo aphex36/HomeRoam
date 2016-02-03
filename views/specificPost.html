@@ -1,0 +1,48 @@
+<div id='displayPost' style='display: none'>
+  <h2 style='display: inline-block; padding-left: 10px'>{{results.name}}</h2>
+  <div>
+    <div style="float: left; width: 50%">
+      <div style='width: 100%; padding-top: 10px; padding-left: 10px; text-align: center'>
+        <img style='width: 100%' ng-src="{{results.source}}"></img>
+      </div>
+    </div>
+    <div style="float: left; padding-left: 10px;width: 50%">
+      <h3>
+        <span style="text-decoration: underline; font-weight: bolder">User</span>: <a href='#/users/{{results.poster}}'>{{results.poster}}</a>
+      </h3>
+      <h3>
+        <span style="text-decoration: underline; font-weight: bolder">Location</span>: {{results.location}}
+      </h3>
+      <h3>
+        <span style="text-decoration: underline; font-weight: bolder">Description</span>: {{results.description}}
+      </h3>
+      <h3>
+        <span style="text-decoration: underline; font-weight: bolder">Type</span>: {{results.type}}
+      </h3>
+      <h3>
+        <span style="text-decoration: underline; font-weight: bolder">Action</span>: {{results.action}}
+      </h3>
+      <h3>
+        <span style="text-decoration: underline; font-weight: bolder">Square Feet</span>: {{results.square_feet}}
+      </h3>
+      <div class="dropdown" style="display: inline-block; margin-bottom: 0px">
+        <button class="btn btn-primary" type="button" data-toggle="dropdown"><i style="padding-right:5px" class="fa fa-envelope-o"></i>Reply to this listing<span style="padding-left:2px" class="caret"></span></button>
+        <ul class="dropdown-menu">
+          <li>
+            <label style='margin-right: 5px; color: #34495E'>Email: {{results.email}}</label>
+          </li>
+          <li>
+            <a href="https://mail.google.com/mail/?view=cm&fs=1&to={{results.email}}&su=Interested+in+your+house" target="_blank">
+              <i style="padding-right: 5px; color: black" class="fa fa-google"></i>Use Gmail
+            </a>
+          </li>
+          <li>
+            <a href="http://compose.mail.yahoo.com/?to={{results.email}}&subject=Interested+in+your+house" target="_blank">
+              <i style="padding-right: 5px; color: black" class="fa fa-yahoo"></i>Use Yahoo Mail
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

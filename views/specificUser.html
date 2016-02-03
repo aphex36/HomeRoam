@@ -1,0 +1,50 @@
+<div id='userPage' style="margin-left: 100px; display: none">
+  <h2 style="text-align: center">{{specUser.title}}</h2>
+  <div>
+    <img style='width: 200px; height:200px;' src="http://educationequality.ie/wp-content/uploads/2015/12/anonymous_user_profile.jpg"></img>
+  </div>
+  <h3>{{specUser.email}}</h3>
+    <h3>History</h3>
+    <ul class="nav nav-tabs">
+      <li class="active"><a data-toggle="tab">Reviews</a></li>
+      <li><a href="#/users/{{specUser.user_name}}/posts?display=gallery" data-toggle="tab">User Listings</a></li>
+    </ul>
+  <br>
+ <div style="width: 100%">
+  <div ng-if='results' style='width: 60%; border: 1px solid black'>
+    <div class="reviews" ng-repeat='review in results' style="margin-right: 100px; height:auto">
+      <div id="left-pane">
+        <div class='list-question question-info'>
+          <h2>{{review.summary}}</h2>
+          <h3><a href="#/users/{{review.byuser}}">{{review.byuser}}</a></h3>
+          <div style='text-align:left'>
+              <span class="stars" style='color: black; margin: 0px; padding: 0px;' >Rating: {{review.stars}}/5</span>
+          </div>
+          <br>
+          <span style='color: black'>{{review.review}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div ng-if='results === undefined'>
+    <h3>No reviews yet!</h3>
+  </div>
+  <br><br>
+  <div ng-if="!isUserOnOwnPage">
+    <br>
+    <h3 style='font-weight: 30px'>Write a review about this user</h3>
+    <span id='reviewError' style='color: red; visibility: hidden'>Error</span><br>
+    <input placeholder="Give a brief summary in 50 characters about your experience with this user" style='margin-left:0px; margin-bottom: 20px; color: black; border: 1px solid grey; width: 60%' id='newSummary'></input>
+    <textarea id="newReviewArea" placeholder="Share your thoughts and experiences with the user in 3000 characters or less" style="margin-left:0px; color: black; resize: none; margin-bottom: 0px; height: 200px; width: 60%;"  type="text"></textarea><br>
+    <h3 type='color: black'>Number Of Stars</h3>
+    <select id='ratingByUser'>
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+      <option>5</option>
+    </select><br><br>
+    <button style='float:left; margin-bottom: 30px;' id="newReview" class='btn btn-primary'>Submit</button>
+  </div>
+ </div>
+</div>

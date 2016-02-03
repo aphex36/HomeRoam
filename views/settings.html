@@ -1,0 +1,19 @@
+
+<div style="padding-left: 100px">
+  <h3>Settings</h3>
+  <ul class="nav nav-tabs">
+    <li class="active"><a id='passwordTab' data-toggle="tab">Password</a></li>
+    <li><a id='emailTab' data-toggle="tab">Email</a></li>
+    <li><a id='personalPostsTab' data-toggle="tab">My Posts</a></li>
+  </ul>
+  <br>
+    <div id='updateArea' style='width: 100%'>
+      <div style='width: 30%'>
+        <span style='color:black; font-size: 20px; font-weight: bold'>Update password</span><br>
+        <span id='updatePasswordError' style='display: none; color:red'>Previous old password is incorrect</span><br>
+        <span style='color:black'>Old Password</span><input id='oldPassword' type='password' style='float: right;color:black'></input><br><br>
+        <span style='color:black'>New Password </span><input id='newPassword' type='password' style='float: right;color:black'></input><br><br>
+        <button type="button" id='updatePassword' style='float: right' class="btn btn-primary">Update</button><br><br>
+      </div>
+    </div>
+</div>
